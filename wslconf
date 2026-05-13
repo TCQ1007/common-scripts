@@ -1,9 +1,9 @@
 #!/bin/bash
-# Usage: sudo wsl-systemd on|off|status
+# Usage: sudo wslconf on|off|status|reset
 
 WSL_CONF="/etc/wsl.conf"
 
-systemd_status() {
+conf_status() {
     if grep -q "^systemd=true" "$WSL_CONF" 2>/dev/null; then
         echo "systemd: ON"
     elif grep -q "^systemd=false" "$WSL_CONF" 2>/dev/null; then
@@ -13,7 +13,7 @@ systemd_status() {
     fi
 }
 
-systemd_set() {
+conf_set_systemd() {
     local val="$1"
     local label="$2"
 
@@ -28,18 +28,42 @@ systemd_set() {
     echo "⚠  Reboot WSL to take effect: wsl.exe --shutdown"
 }
 
+conf_reset() {
+    sudo tee "$WSL_CONF" > /dev/null <<'EOF'
+[boot]
+systemd=false
+
+[user]
+default=will
+
+[automount]
+enabled=false
+mountFsTab=true
+options=metadata,umask=22,fmask=11
+
+[interop]
+appendWindowsPath=false
+enabled=true
+EOF
+    echo "wsl.conf reset to defaults"
+    echo "⚠  Reboot WSL to take effect: wsl.exe --shutdown"
+}
+
 case "${1:-status}" in
     on|enable|1|true)
-        systemd_set "true" "ON"
+        conf_set_systemd "true" "ON"
         ;;
     off|disable|0|false)
-        systemd_set "false" "OFF"
+        conf_set_systemd "false" "OFF"
+        ;;
+    reset)
+        conf_reset
         ;;
     status|-s)
-        systemd_status
+        conf_status
         ;;
     *)
-        echo "Usage: sudo $0 on|off|status"
+        echo "Usage: sudo $0 on|off|status|reset"
         exit 1
         ;;
 esac

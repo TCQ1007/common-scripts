@@ -16,14 +16,15 @@ Custom host/port:
 PROXY_HOST=192.168.1.1 PROXY_PORT=8080 source proxy on
 ```
 
-## wsl-systemd
+## wslconf
 
-Toggle systemd in WSL (`/etc/wsl.conf`). Requires sudo.
+Configure WSL (`/etc/wsl.conf`). Requires sudo.
 
 ```bash
-sudo wsl-systemd on      # enable systemd
-sudo wsl-systemd off     # disable systemd
-sudo wsl-systemd status  # show current setting
+sudo wslconf on       # enable systemd
+sudo wslconf off      # disable systemd
+sudo wslconf reset    # reset to defaults (systemd=off)
+sudo wslconf status   # show current setting
 ```
 
 Changes take effect after `wsl.exe --shutdown` and restart.
