@@ -1,0 +1,48 @@
+#!/bin/bash
+# Usage: source proxy on|off|status
+#     on:      set http_proxy, https_proxy, all_proxy, no_proxy
+#     off:     unset all proxy variables
+#     status:  show current proxy settings
+
+PROXY_HOST="${PROXY_HOST:-127.0.0.1}"
+PROXY_PORT="${PROXY_PORT:-7890}"
+PROXY_URL="http://${PROXY_HOST}:${PROXY_PORT}"
+NO_PROXY_DEFAULT="localhost,127.0.0.1,::1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
+
+proxy_on() {
+    export http_proxy="$PROXY_URL"
+    export https_proxy="$PROXY_URL"
+    export all_proxy="$PROXY_URL"
+    export no_proxy="$NO_PROXY_DEFAULT"
+    echo "Proxy ON  → $PROXY_URL"
+}
+
+proxy_off() {
+    unset http_proxy https_proxy all_proxy no_proxy
+    echo "Proxy OFF"
+}
+
+proxy_status() {
+    echo "http_proxy=${http_proxy:-<unset>}"
+    echo "https_proxy=${https_proxy:-<unset>}"
+    echo "all_proxy=${all_proxy:-<unset>}"
+    echo "no_proxy=${no_proxy:-<unset>}"
+}
+
+case "${1:-status}" in
+    on|enable|1)
+        proxy_on
+        ;;
+    off|disable|0)
+        proxy_off
+        ;;
+    status|-s)
+        proxy_status
+        ;;
+    *)
+        echo "Usage: source $0 on|off|status"
+        echo ""
+        echo "  PROXY_HOST=127.0.0.1 PROXY_PORT=7890 source $0 on"
+        return 1 2>/dev/null || exit 1
+        ;;
+esac

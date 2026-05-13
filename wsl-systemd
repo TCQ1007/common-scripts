@@ -1,0 +1,45 @@
+#!/bin/bash
+# Usage: sudo wsl-systemd on|off|status
+
+WSL_CONF="/etc/wsl.conf"
+
+systemd_status() {
+    if grep -q "^systemd=true" "$WSL_CONF" 2>/dev/null; then
+        echo "systemd: ON"
+    elif grep -q "^systemd=false" "$WSL_CONF" 2>/dev/null; then
+        echo "systemd: OFF"
+    else
+        echo "systemd: <not configured> (default: OFF)"
+    fi
+}
+
+systemd_set() {
+    local val="$1"
+    local label="$2"
+
+    if grep -q "^systemd=" "$WSL_CONF" 2>/dev/null; then
+        sudo sed -i "s/^systemd=.*/systemd=${val}/" "$WSL_CONF"
+    elif grep -q "^\[boot\]" "$WSL_CONF" 2>/dev/null; then
+        sudo sed -i "/^\[boot\]/a systemd=${val}" "$WSL_CONF"
+    else
+        printf "\n[boot]\nsystemd=%s\n" "$val" | sudo tee -a "$WSL_CONF" > /dev/null
+    fi
+    echo "systemd set to ${label}"
+    echo "⚠  Reboot WSL to take effect: wsl.exe --shutdown"
+}
+
+case "${1:-status}" in
+    on|enable|1|true)
+        systemd_set "true" "ON"
+        ;;
+    off|disable|0|false)
+        systemd_set "false" "OFF"
+        ;;
+    status|-s)
+        systemd_status
+        ;;
+    *)
+        echo "Usage: sudo $0 on|off|status"
+        exit 1
+        ;;
+esac
