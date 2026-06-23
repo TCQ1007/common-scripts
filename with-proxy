@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Usage: with-proxy command [args...]
+# Temporarily enable ~/scripts/proxy for one command, then restore.
+# If http_proxy is already set, runs command unchanged (does not turn proxy off).
+#
+# Examples:
+#   with-proxy git push origin master
+#   with-proxy gh pr create --title "fix"
+#   with-proxy curl -fsSL https://api.github.com
+
+set -uo pipefail
+
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROXY_SCRIPT="$SCRIPTS_DIR/proxy"
+
+if [ $# -eq 0 ]; then
+    echo "Usage: with-proxy command [args...]" >&2
+    echo "Example: with-proxy git push origin master" >&2
+    exit 1
+fi
+
+_managed=0
+if [ -z "${http_proxy:-}" ]; then
+    # shellcheck disable=SC1091
+    source "$PROXY_SCRIPT" on
+    _managed=1
+fi
+
+cleanup() {
+    local code=$?
+    if [ "$_managed" -eq 1 ]; then
+        # shellcheck disable=SC1091
+        source "$PROXY_SCRIPT" off
+    fi
+    exit "$code"
+}
+trap cleanup EXIT
+
+"$@"

@@ -1,10 +1,11 @@
 ---
 name: local-scripts-skill
 description: >-
-  Personal shell utilities in ~/scripts: HTTP proxy toggle, PyPI/HuggingFace
-  mirrors, WSL systemd config, Zone.Identifier cleanup, nginx reverse proxy
-  (mineru/minio), Docker Desktop installer. Use when working with ~/scripts,
-  proxy, wslconf, env.sh, clean_zone, nginx-proxy, mineru-api, or WSL setup.
+  Personal shell utilities in ~/scripts: with-proxy for GitHub/foreign networks,
+  HTTP proxy toggle, PyPI/HuggingFace mirrors, WSL systemd config,
+  Zone.Identifier cleanup, nginx reverse proxy (mineru/minio), Docker Desktop
+  installer. Use for git push/pull to github, gh, curl foreign URLs, or ~/scripts
+  proxy, wslconf, env.sh, clean_zone, nginx-proxy, mineru-api, WSL setup.
 ---
 
 # Local Scripts (`~/scripts`)
@@ -15,6 +16,7 @@ Git repo at `~/scripts`. Scripts live on disk — **run or source them directly*
 
 | Script | Must use |
 |--------|----------|
+| `with-proxy` | execute: `~/scripts/with-proxy command …` |
 | `proxy` | `source ~/scripts/proxy …` |
 | `env.sh` | `source ~/scripts/env.sh …` |
 | `wslconf` | `sudo ~/scripts/wslconf …` (not sourced) |
@@ -22,7 +24,25 @@ Git repo at `~/scripts`. Scripts live on disk — **run or source them directly*
 
 Sourcing is required for `proxy` and `env.sh` so env vars and venv activation persist in the current shell.
 
-## proxy — HTTP proxy toggle
+## with-proxy — foreign network (GitHub, etc.)
+
+**Default for Agent**: wrap any foreign-network command with `with-proxy`. It enables proxy, runs the command, then disables proxy. If proxy was already on, it leaves it on.
+
+```bash
+~/scripts/with-proxy git push origin master
+~/scripts/with-proxy git pull
+~/scripts/with-proxy gh pr create --title "fix"
+~/scripts/with-proxy curl -fsSL https://api.github.com
+~/scripts/with-proxy docker pull nginx:alpine
+```
+
+Use when: `git`/`gh` to github.com, default npm/pip/docker registries, curl/wget to foreign domains.
+
+**Do not use** for domestic mirrors (`UV_INDEX` aliyun, `HF_ENDPOINT` hf-mirror) or localhost/internal hosts.
+
+Do **not** manually `source proxy on/off` around commands when `with-proxy` applies — use the wrapper instead.
+
+## proxy — HTTP proxy toggle (manual / persistent session)
 
 ```bash
 source ~/scripts/proxy on       # default http://127.0.0.1:7890
@@ -102,11 +122,13 @@ $exe="Docker Desktop Installer.exe"; $proxy="http://127.0.0.1:7890"; $dir="E:\So
 
 ## Agent workflow
 
-1. Identify which script fits the task (table above).
-2. Prefer existing scripts over reimplementing the same env/proxy/WSL logic.
-3. For `proxy` / `env.sh`: always `source`; verify with `status` or echoed exports.
-4. For `wslconf` / nginx changes: remind user WSL reboot or `docker compose` restart may be needed.
-5. To extend behavior: edit files in `~/scripts` and commit there — not workspace copies.
+1. **Foreign network** → `~/scripts/with-proxy <command>` (not manual source on/off).
+2. Identify which script fits the task (table above).
+3. Prefer existing scripts over reimplementing the same env/proxy/WSL logic.
+4. For persistent proxy in a shell session only: `source ~/scripts/proxy on|off`.
+5. For `env.sh`: always `source`.
+6. For `wslconf` / nginx changes: remind user WSL reboot or `docker compose` restart may be needed.
+7. To extend behavior: edit files in `~/scripts` and commit there — not workspace copies.
 
 ## Reference
 
